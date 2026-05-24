@@ -41,7 +41,9 @@ export function JournalPage() {
     }
 
     useEffect(() => {
-        load();
+        api.getJournal()
+            .then(setEntries)
+            .catch(() => setError('Could not load journal.'));
     }, []);
 
     return (

@@ -108,6 +108,7 @@ export function FormStep({ config, existing, onCompleted, onBack }: Props) {
                 helperText={errors.email}
                 fullWidth
                 required
+                autoComplete="email"
                 slotProps={{
                     input: {
                         startAdornment: (
@@ -128,6 +129,7 @@ export function FormStep({ config, existing, onCompleted, onBack }: Props) {
                 helperText={errors.phone ?? 'Digits, spaces, parentheses, dashes and an optional leading +.'}
                 fullWidth
                 required
+                autoComplete="tel"
                 slotProps={{
                     input: {
                         startAdornment: (

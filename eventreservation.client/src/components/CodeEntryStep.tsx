@@ -64,6 +64,7 @@ export function CodeEntryStep({ onLoaded, onBack }: Props) {
                 onKeyDown={(e) => {
                     if (e.key === 'Enter' && trimmed && !loading) handleLoad();
                 }}
+                autoComplete="off"
                 sx={{ maxWidth: 360 }}
                 slotProps={{
                     input: {

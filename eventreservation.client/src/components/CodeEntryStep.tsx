@@ -28,10 +28,6 @@ export function CodeEntryStep({ onLoaded, onBack }: Props) {
         setError(null);
         try {
             const reservation = await api.getReservation(code.trim().toUpperCase());
-            if (reservation.isCancelled) {
-                setError('This reservation has been cancelled and cannot be modified.');
-                return;
-            }
             onLoaded(reservation);
         } catch (err) {
             if (err instanceof ApiException && err.status === 404) {

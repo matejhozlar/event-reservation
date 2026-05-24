@@ -23,7 +23,8 @@ async function request<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
     if (!response.ok) {
         let body: ApiError = { error: response.statusText };
         try {
-            body = await response.json();
+            const raw = await response.json();
+            body = normalizeError(raw, response.statusText);
         } catch {
             // ignore — keep default body
         }
@@ -35,6 +36,38 @@ async function request<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
     }
 
     return (await response.json()) as T;
+}
+
+function normalizeError(raw: unknown, fallback: string): ApiError {
+    if (raw && typeof raw === 'object') {
+        const obj = raw as Record<string, unknown>;
+        if (typeof obj.error === 'string') {
+            const out: ApiError = { error: obj.error };
+            if (typeof obj.remainingCapacity === 'number') {
+                out.remainingCapacity = obj.remainingCapacity;
+            }
+            return out;
+        }
+        if (obj.errors && typeof obj.errors === 'object') {
+            const messages: string[] = [];
+            for (const value of Object.values(obj.errors as Record<string, unknown>)) {
+                if (Array.isArray(value)) {
+                    for (const v of value) {
+                        if (typeof v === 'string') messages.push(v);
+                    }
+                } else if (typeof value === 'string') {
+                    messages.push(value);
+                }
+            }
+            if (messages.length > 0) {
+                return { error: messages.join(' ') };
+            }
+        }
+        if (typeof obj.title === 'string') {
+            return { error: obj.title };
+        }
+    }
+    return { error: fallback };
 }
 
 export const api = {

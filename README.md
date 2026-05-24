@@ -10,7 +10,8 @@ with SQLite storage.
 - Create, view, edit, and cancel a reservation, identified by a short code
   (`EVT-XXXXX`).
 - Server-side enforcement of capacity (100 seats) and per-reservation limit
-  (10 tickets) inside a transaction.
+  (10 tickets) inside a serializable transaction (SQLite `BEGIN IMMEDIATE`)
+  so concurrent writes cannot overbook.
 - Client- and server-side validation of email, phone, and ticket count.
 - Every mutation is recorded in a journal with IP address, User-Agent,
   timestamp, and a JSON snapshot of the payload.

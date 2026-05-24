@@ -1,3 +1,4 @@
+using System.Data;
 using EventReservation.Server.Contracts;
 using EventReservation.Server.Data;
 using EventReservation.Server.Domain;
@@ -50,7 +51,7 @@ public class ReservationService : IReservationService
             };
         }
 
-        await using var tx = await _db.Database.BeginTransactionAsync(ct);
+        await using var tx = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
 
         var remaining = await GetRemainingCapacityAsync(ct);
         if (request.TicketCount > remaining)
@@ -95,7 +96,7 @@ public class ReservationService : IReservationService
             };
         }
 
-        await using var tx = await _db.Database.BeginTransactionAsync(ct);
+        await using var tx = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
 
         var entity = await _db.Reservations.FirstOrDefaultAsync(r => r.Code == code, ct);
         if (entity is null) return ReservationResult.NotFound();
@@ -131,7 +132,7 @@ public class ReservationService : IReservationService
 
     public async Task<ReservationResult> CancelAsync(string code, CancellationToken ct = default)
     {
-        await using var tx = await _db.Database.BeginTransactionAsync(ct);
+        await using var tx = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
 
         var entity = await _db.Reservations.FirstOrDefaultAsync(r => r.Code == code, ct);
         if (entity is null) return ReservationResult.NotFound();

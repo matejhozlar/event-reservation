@@ -16,7 +16,7 @@ import { api, ApiException } from '../api/client';
 interface Props {
     config: EventConfig;
     existing: Reservation | null;
-    onCompleted: (reservation: Reservation) => void;
+    onCompleted: (reservation: Reservation, outcome: 'created' | 'updated') => void;
     onBack: () => void;
 }
 
@@ -41,6 +41,12 @@ export function FormStep({ config, existing, onCompleted, onBack }: Props) {
 
     const isEdit = existing !== null;
     const max = config.maxTicketsPerReservation;
+
+    const isDirty =
+        !isEdit ||
+        email.trim() !== existing!.email ||
+        phone.trim() !== existing!.phone ||
+        Number(ticketCount) !== existing!.ticketCount;
 
     function validate(): FieldErrors {
         const next: FieldErrors = {};
@@ -75,7 +81,7 @@ export function FormStep({ config, existing, onCompleted, onBack }: Props) {
             const result = isEdit
                 ? await api.updateReservation(existing!.code, input)
                 : await api.createReservation(input);
-            onCompleted(result);
+            onCompleted(result, isEdit ? 'updated' : 'created');
         } catch (err) {
             if (err instanceof ApiException) {
                 setSubmitError(err.body.error);
@@ -163,7 +169,7 @@ export function FormStep({ config, existing, onCompleted, onBack }: Props) {
                 <Button
                     variant="contained"
                     onClick={handleSubmit}
-                    disabled={submitting}
+                    disabled={submitting || !isDirty}
                 >
                     {isEdit ? 'Save changes' : 'Confirm reservation'}
                 </Button>

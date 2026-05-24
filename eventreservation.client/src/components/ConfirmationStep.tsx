@@ -3,29 +3,40 @@ import {
     Alert,
     Box,
     Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
     Divider,
     IconButton,
+    Link,
     Paper,
     Stack,
     Tooltip,
     Typography,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import EventNoteIcon from '@mui/icons-material/EventNote';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import EditIcon from '@mui/icons-material/Edit';
 import type { Reservation } from '../types';
 import { api, ApiException } from '../api/client';
 
 interface Props {
     reservation: Reservation;
-    onStartOver: () => void;
+    outcome: 'created' | 'updated' | 'loaded';
+    onCreateNew: () => void;
+    onEdit: () => void;
     onCancelled: (reservation: Reservation) => void;
 }
 
-export function ConfirmationStep({ reservation, onStartOver, onCancelled }: Props) {
+export function ConfirmationStep({ reservation, outcome, onCreateNew, onEdit, onCancelled }: Props) {
     const [copied, setCopied] = useState(false);
     const [cancelling, setCancelling] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [confirmOpen, setConfirmOpen] = useState(false);
 
     async function handleCopy() {
         try {
@@ -38,7 +49,7 @@ export function ConfirmationStep({ reservation, onStartOver, onCancelled }: Prop
     }
 
     async function handleCancel() {
-        if (!confirm('Cancel this reservation? This cannot be undone.')) return;
+        setConfirmOpen(false);
         setCancelling(true);
         setError(null);
         try {
@@ -52,46 +63,65 @@ export function ConfirmationStep({ reservation, onStartOver, onCancelled }: Prop
     }
 
     const cancelled = reservation.isCancelled;
+    const isLoaded = outcome === 'loaded' && !cancelled;
+
+    const heading = cancelled
+        ? 'Reservation cancelled'
+        : outcome === 'updated'
+          ? 'Reservation updated'
+          : outcome === 'loaded'
+            ? 'Your reservation'
+            : 'Reservation confirmed';
 
     return (
         <Stack spacing={3} sx={{ alignItems: 'center', textAlign: 'center' }}>
-            <CheckCircleIcon
-                sx={{ fontSize: 64, color: cancelled ? 'text.disabled' : 'success.main' }}
-            />
-            <Typography variant="h5">
-                {cancelled ? 'Reservation cancelled' : 'Reservation confirmed'}
-            </Typography>
+            {isLoaded ? (
+                <EventNoteIcon sx={{ fontSize: 64, color: 'primary.main' }} />
+            ) : (
+                <CheckCircleIcon
+                    sx={{ fontSize: 64, color: cancelled ? 'text.disabled' : 'success.main' }}
+                />
+            )}
+            <Typography variant="h5">{heading}</Typography>
 
             {!cancelled && (
                 <Box>
-                    <Typography variant="overline" color="text.secondary">
+                    <Typography variant="overline" color="text.secondary" sx={{ display: 'block' }}>
                         Your reservation code
                     </Typography>
-                    <Stack
-                        direction="row"
-                        spacing={1}
-                        sx={{ alignItems: 'center', justifyContent: 'center' }}
+                    <Paper
+                        variant="outlined"
+                        sx={{
+                            mt: 1,
+                            pl: 3,
+                            pr: 1,
+                            py: 0.5,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 2,
+                            bgcolor: 'background.default',
+                        }}
                     >
-                        <Paper
-                            variant="outlined"
+                        <Typography
                             sx={{
-                                px: 3,
-                                py: 1.5,
                                 fontFamily: 'monospace',
                                 fontSize: '1.5rem',
                                 letterSpacing: 2,
-                                bgcolor: 'background.default',
                             }}
                         >
                             {reservation.code}
-                        </Paper>
+                        </Typography>
                         <Tooltip title={copied ? 'Copied!' : 'Copy code'}>
-                            <IconButton onClick={handleCopy}>
-                                <ContentCopyIcon />
+                            <IconButton onClick={handleCopy} size="small">
+                                <ContentCopyIcon fontSize="small" />
                             </IconButton>
                         </Tooltip>
-                    </Stack>
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                    </Paper>
+                    <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ mt: 1.5, display: 'block' }}
+                    >
                         Save this code to edit or cancel your reservation later.
                     </Typography>
                 </Box>
@@ -109,22 +139,60 @@ export function ConfirmationStep({ reservation, onStartOver, onCancelled }: Prop
 
             {error && <Alert severity="error">{error}</Alert>}
 
-            <Stack direction="row" spacing={2}>
-                <Button variant="outlined" onClick={onStartOver}>
-                    Start over
+            {cancelled ? (
+                <Button variant="contained" onClick={onCreateNew}>
+                    Create a new reservation
                 </Button>
-                {!cancelled && (
-                    <Button
-                        variant="outlined"
-                        color="error"
-                        startIcon={<DeleteOutlineIcon />}
-                        onClick={handleCancel}
-                        disabled={cancelling}
+            ) : (
+                <>
+                    <Stack direction="row" spacing={2}>
+                        <Button
+                            variant="contained"
+                            startIcon={<EditIcon />}
+                            onClick={onEdit}
+                        >
+                            Edit reservation
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            color="error"
+                            startIcon={<DeleteOutlineIcon />}
+                            onClick={() => setConfirmOpen(true)}
+                            disabled={cancelling}
+                        >
+                            Cancel reservation
+                        </Button>
+                    </Stack>
+                    <Link
+                        component="button"
+                        type="button"
+                        underline="hover"
+                        onClick={onCreateNew}
+                        sx={{ color: 'text.secondary' }}
                     >
-                        Cancel reservation
+                        or create a new reservation
+                    </Link>
+                </>
+            )}
+
+            <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+                <DialogTitle>Cancel reservation?</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        This will cancel reservation <strong>{reservation.code}</strong> and
+                        free up {reservation.ticketCount}{' '}
+                        {reservation.ticketCount === 1 ? 'seat' : 'seats'}. This cannot be undone.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setConfirmOpen(false)} disabled={cancelling}>
+                        Keep reservation
                     </Button>
-                )}
-            </Stack>
+                    <Button color="error" onClick={handleCancel} disabled={cancelling}>
+                        Cancel it
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Stack>
     );
 }

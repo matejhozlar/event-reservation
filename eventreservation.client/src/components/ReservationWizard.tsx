@@ -12,19 +12,23 @@ import {
 import type { EventConfig, Reservation } from '../types';
 import { api } from '../api/client';
 import { WelcomeStep } from './WelcomeStep';
+import { CodeEntryStep } from './CodeEntryStep';
 import { FormStep } from './FormStep';
 import { ConfirmationStep } from './ConfirmationStep';
 
 type StepIndex = 0 | 1 | 2;
+type WelcomeMode = 'choose' | 'enterCode';
 
 const steps = ['Welcome', 'Your details', 'Confirmation'];
 
 export function ReservationWizard() {
     const [step, setStep] = useState<StepIndex>(0);
+    const [welcomeMode, setWelcomeMode] = useState<WelcomeMode>('choose');
     const [config, setConfig] = useState<EventConfig | null>(null);
     const [configError, setConfigError] = useState<string | null>(null);
     const [existing, setExisting] = useState<Reservation | null>(null);
     const [result, setResult] = useState<Reservation | null>(null);
+    const [outcome, setOutcome] = useState<'created' | 'updated' | 'loaded'>('created');
 
     useEffect(() => {
         api.getConfig()
@@ -35,6 +39,7 @@ export function ReservationWizard() {
     function reset() {
         setExisting(null);
         setResult(null);
+        setWelcomeMode('choose');
         setStep(0);
         api.getConfig().then(setConfig).catch(() => undefined);
     }
@@ -65,34 +70,51 @@ export function ReservationWizard() {
                 ))}
             </Stepper>
             <Paper elevation={2} sx={{ p: { xs: 3, sm: 5 } }}>
-                {step === 0 && (
+                {step === 0 && welcomeMode === 'choose' && (
                     <WelcomeStep
                         config={config}
                         onStartNew={() => {
                             setExisting(null);
                             setStep(1);
                         }}
-                        onLoadedExisting={(reservation) => {
+                        onEnterCode={() => setWelcomeMode('enterCode')}
+                    />
+                )}
+                {step === 0 && welcomeMode === 'enterCode' && (
+                    <CodeEntryStep
+                        onLoaded={(reservation) => {
                             setExisting(reservation);
-                            setStep(1);
+                            setResult(reservation);
+                            setOutcome('loaded');
+                            setStep(2);
                         }}
+                        onBack={() => setWelcomeMode('choose')}
                     />
                 )}
                 {step === 1 && (
                     <FormStep
                         config={config}
                         existing={existing}
-                        onCompleted={(reservation) => {
+                        onCompleted={(reservation, completedOutcome) => {
                             setResult(reservation);
+                            setOutcome(completedOutcome);
                             setStep(2);
                         }}
-                        onBack={() => setStep(0)}
+                        onBack={() => {
+                            setWelcomeMode('choose');
+                            setStep(0);
+                        }}
                     />
                 )}
                 {step === 2 && result && (
                     <ConfirmationStep
                         reservation={result}
-                        onStartOver={reset}
+                        outcome={outcome}
+                        onCreateNew={reset}
+                        onEdit={() => {
+                            setExisting(result);
+                            setStep(1);
+                        }}
                         onCancelled={(reservation) => setResult(reservation)}
                     />
                 )}

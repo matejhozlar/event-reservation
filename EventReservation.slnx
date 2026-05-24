@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="eventreservation.client/eventreservation.client.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="EventReservation.Server/EventReservation.Server.csproj" />
+</Solution>

@@ -1,4 +1,4 @@
-import type { ApiError, EventConfig, Reservation, ReservationInput } from '../types';
+import type { ApiError, EventConfig, JournalEntry, Reservation, ReservationInput } from '../types';
 
 export class ApiException extends Error {
     status: number;
@@ -87,4 +87,5 @@ export const api = {
         request<Reservation>(`/api/reservations/${encodeURIComponent(code)}`, {
             method: 'DELETE',
         }),
+    getJournal: () => request<JournalEntry[]>('/api/journal'),
 };

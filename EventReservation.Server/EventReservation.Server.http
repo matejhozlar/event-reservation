@@ -31,4 +31,8 @@ Content-Type: application/json
 ### Cancel a reservation
 DELETE {{EventReservation.Server_HostAddress}}/api/reservations/EVT-XXXXX
 
+### List all journal entries (newest first)
+GET {{EventReservation.Server_HostAddress}}/api/journal
+Accept: application/json
+
 ###

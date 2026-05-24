@@ -25,3 +25,13 @@ export interface ApiError {
     error: string;
     remainingCapacity?: number;
 }
+
+export interface JournalEntry {
+    id: number;
+    reservationCode: string;
+    action: 'Create' | 'Update' | 'Cancel';
+    ipAddress: string | null;
+    userAgent: string | null;
+    timestamp: string;
+    payloadJson: string | null;
+}

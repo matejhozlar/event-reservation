@@ -93,6 +93,7 @@ Base URL: `https://localhost:7254`
 | `GET`    | `/api/reservations/{code}` | -                                 | Fetch a reservation by code                        |
 | `PUT`    | `/api/reservations/{code}` | `{ email, phone, ticketCount }`   | Update an existing reservation                     |
 | `DELETE` | `/api/reservations/{code}` | -                                 | Soft-cancel a reservation                          |
+| `GET`    | `/api/journal`             | -                                 | All journal entries newest-first (see Journal)     |
 
 Example requests are in `EventReservation.Server/EventReservation.Server.http`
 (clickable inside Visual Studio).
@@ -132,11 +133,14 @@ Every create / update / cancel operation writes a `JournalEntry` row with:
 - `Timestamp` (UTC)
 - `PayloadJson` snapshot of the request
 
-You can inspect the journal directly in `eventreservation.db` with any SQLite
-browser:
+There are two ways to view the journal:
 
-```sql
-SELECT Timestamp, ReservationCode, Action, IpAddress, UserAgent, PayloadJson
-FROM JournalEntries
-ORDER BY Timestamp DESC;
-```
+1. **In the browser** at [`/journal`](https://localhost:52262/journal) — a
+   simple read-only table page that lists every entry newest first, with
+   a refresh button. This is also what `GET /api/journal` returns as JSON.
+2. **Directly in `eventreservation.db`** with any SQLite browser:
+   ```sql
+   SELECT Timestamp, ReservationCode, Action, IpAddress, UserAgent, PayloadJson
+   FROM JournalEntries
+   ORDER BY Timestamp DESC;
+   ```

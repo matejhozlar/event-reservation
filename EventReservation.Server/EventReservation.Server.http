@@ -1,6 +1,34 @@
-@EventReservation.Server_HostAddress = http://localhost:5248
+@EventReservation.Server_HostAddress = https://localhost:7254
 
-GET {{EventReservation.Server_HostAddress}}/weatherforecast/
+### Get event configuration (date, capacity, remaining seats)
+GET {{EventReservation.Server_HostAddress}}/api/config
 Accept: application/json
+
+### Create a new reservation
+POST {{EventReservation.Server_HostAddress}}/api/reservations
+Content-Type: application/json
+
+{
+  "email": "jane@example.com",
+  "phone": "+420 777 123 456",
+  "ticketCount": 2
+}
+
+### Fetch a reservation by code (replace EVT-XXXXX with a real code)
+GET {{EventReservation.Server_HostAddress}}/api/reservations/EVT-XXXXX
+Accept: application/json
+
+### Update a reservation
+PUT {{EventReservation.Server_HostAddress}}/api/reservations/EVT-XXXXX
+Content-Type: application/json
+
+{
+  "email": "jane@example.com",
+  "phone": "+420 777 123 456",
+  "ticketCount": 4
+}
+
+### Cancel a reservation
+DELETE {{EventReservation.Server_HostAddress}}/api/reservations/EVT-XXXXX
 
 ###

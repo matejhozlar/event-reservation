@@ -1,4 +1,5 @@
 using EventReservation.Server.Data;
+using EventReservation.Server.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +12,12 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("AppDb")));
+
+builder.Services.Configure<EventOptions>(builder.Configuration.GetSection(EventOptions.SectionName));
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<IReservationCodeGenerator, ReservationCodeGenerator>();
+builder.Services.AddScoped<IJournalService, JournalService>();
+builder.Services.AddScoped<IReservationService, ReservationService>();
 
 var app = builder.Build();
 
